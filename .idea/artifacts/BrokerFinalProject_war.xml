@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="BrokerFinalProject:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <module>BrokerFinalProject</module>
+        <packaging>war</packaging>
+      </options>
+    </properties>
+    <root id="archive" name="BrokerFinalProject-1.0-SNAPSHOT.war">
+      <element id="artifact" artifact-name="BrokerFinalProject:war exploded" />
+    </root>
+  </artifact>
+</component>
