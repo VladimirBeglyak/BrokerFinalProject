@@ -1,70 +1,212 @@
 package by.broker.http.runner;
 
-import by.broker.http.dao.ClientDao;
-import by.broker.http.dao.CurrenciDao;
-import by.broker.http.dao.StockDao;
+import by.broker.http.dao.*;
+import by.broker.http.dto.StorageStockDto;
 import by.broker.http.entity.*;
+import by.broker.http.mapper.StorageStockByIdMapper;
+import by.broker.http.mapper.StorageStockToClientStock;
+import by.broker.http.service.StorageStockService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 public class DaoRunner {
     public static void main(String[] args) {
-        CurrenciDao currenciDao = CurrenciDao.getInstance();
 
-        ClientDao clientDao=ClientDao.getInstance();
+        CurrencyDao currencyDao = CurrencyDao.getInstance();
+        ClientStockDao stockDao = ClientStockDao.getInstance();
+        DetailDao detailDao = DetailDao.getInstance();
+        ClientDao clientDao = ClientDao.getInstance();
+        MoneyDao moneyDao=MoneyDao.getInstance();
+        StorageStockDao storageStockDao=StorageStockDao.getInstance();
+        StorageStockToClientStock storageStockToClientStock=StorageStockToClientStock.getInstance();
+        ClientStockDao clientStockDao=ClientStockDao.getInstance();
+        StorageStockByIdMapper storageStockByIdMapper=StorageStockByIdMapper.getInstance();
+        StorageStockService storageStockService=StorageStockService.getInstance();
 
-        StockDao stockDao=StockDao.getInstance();
+//*****************************************************************************************************
+//сохранение пользователя и его личных данных
 
-        /*Optional<Client> byId = clientDao.findById(3L);
+
+//        Client client = Client.builder()
+//                .email("vladimir.beglyak@mail.ru")
+//                .password("qwerty")
+//                .role(Role.USER)
+//                .build();
+//
+//        Client savedClient = clientDao.save(client);
+//        System.out.println(savedClient);
+//
+//
+//
+//
+//        Detail detail = Detail.builder()
+//                .firstName("Vladimir")
+//                .lastName("Beglyak")
+//                .fatherName("Vladimir")
+//                .citizenship("Germany")
+//                .birthday(LocalDate.of(1991, 10, 12))
+//                .passportCode("3121091E005PB8")
+//                .clientId(savedClient)
+//                .build();
+//
+//
+//
+//        Detail savedDetail = detailDao.save(detail);
+//        System.out.println(savedDetail);
+
+
+//        boolean delete = detailDao.delete(3L);
+//        System.out.println(delete);
+
+//*******************************************************************************************************
+
+
+        /*Optional<Client> maybeClient = clientDao.findById(5L);
+        Optional<Stock> stock1 = stockDao.findById(1L);
+        Optional<Stock> stock2 = stockDao.findById(2L);
+
+        clientDao.addStockToClient(maybeClient.get(),stock1.get());
+        clientDao.addStockToClient(maybeClient.get(),stock2.get());*/
+
+       /* Optional<Client> byId = clientDao.findById(5L);
         System.out.println(byId);*/
 
-        /*Optional<Stock> byId = stockDao.findById(7L);
-        System.out.println(byId);*/
+//        Optional<Client> byId = clientDao.findById(5L);
+//        Client client = byId.get();
+//        System.out.println(client);
+//
+//        Money money = Money.builder()
+//                .amount(BigDecimal.valueOf(150000))
+//                .currency(currencyDao.findById(3L).orElse(null))
+//                .build();
+//
+//        money.setClient(client);
+//        System.out.println(money);
+//
+//        moneyDao.save(money);
+//
 
-        Optional<Client> byId1 = clientDao.findById(1L);
-        System.out.println(byId1);
-
-
-
-
-
-        /*Optional<Stock> byId = stockDao.findById(6);
-        System.out.println(byId);*/
-
-        /*Optional<Client> byId = clientDao.findById(2L);
-        System.out.println(byId);*/
-
-
-        /*Currenci save = currenciDao.save(Currenci.builder()
-                .name("Euro European Union")
-                .ticker("EUR")
-                .build());
-        System.out.println(save);*/
-
-       /* List<Currenci> currencis = currenciDao.findAll();
-        System.out.println(currencis);*/
-
-       /* boolean delete = currenciDao.delete(2L);
-        System.out.println(delete);*/
+//        List<Money> allByClientId = moneyDao.findAllByClientId(5L);
+//        System.out.println(allByClientId);
+//        for (Money money : allByClientId) {
+//            System.out.println(money);
+//        }
+//
+//        Optional<Client> byId = clientDao.findById(5L);
+//        System.out.println(byId);
 
 
+//        Optional<Currency> byId = currencyDao.findById(1L);
+//        System.out.println(byId);
 
-        /*Optional<Currenci> maybeCurrenci = currenciDao.findById(2L);
-        System.out.println(maybeCurrenci);
+//*************************************************************
 
-        maybeCurrenci.ifPresent(currenci -> {
-            currenci.setTicker("CAN");
-            currenci.setName("Canadian Dollar");
-            currenciDao.update(currenci);
-        });*/
+//        Client savedClient = clientDao.save(Client.builder()
+//                .email("vladimir.beglyak@mail.ru")
+//                .password("qwerty")
+//                .build());
+//
+//        System.out.println(savedClient);
+//
+//        savedClient.setDetail(Detail.builder()
+//                .firstName("vladimir")
+//                .lastName("Beglyak")
+//                .fatherName("Vladimir")
+//                .birthday(LocalDate.of(1991,10,12))
+//                .citizenship("Belarus")
+//                .passportCode("3121091E005PB8")
+//                .build());
+//**************************************************************************************************
+//        Optional<Client> maybeClient = clientDao.findById(1L);
+//
+//        Client client = maybeClient.get();
+//        System.out.println(client);
+//
+//        client.setDetail(Detail.builder()
+//                .firstName("vladimir")
+//                .lastName("Beglyak")
+//                .fatherName("Vladimir")
+//                .birthday(LocalDate.of(1991,10,12))
+//                .citizenship("Belarus")
+//                .passportCode("3121091E005PB8")
+//                .build());
+//
+//        detailDao.save(client.getDetail());
+//
+//        System.out.println(client);
+//
+//       clientDao.update(client);
+//************************************************************************************************
 
-        /*Currenci savedCurrenci = currenciDao.save(Currenci.builder()
-                .name("Russian Rubles")
-                .ticker("RUB")
-                .build());
+//        StorageStock savedStock = storageStockDao.save(StorageStock.builder()
+//                .ticker("APL")
+//                .name("Apple")
+//                .amount(3000L)
+//                .costOneStock(BigDecimal.valueOf(150))
+//                .county("US")
+//                .dividend(BigDecimal.valueOf(1.5))
+//                .currency(currencyDao.findById(1L).orElse(null))
+//                .build());
+//
+//        System.out.println(savedStock);
 
-        System.out.println(savedCurrenci);*/
+
+//        List<StorageStock> all = storageStockDao.findAll();
+//        for (StorageStock storageStock : all) {
+//            System.out.println(storageStock);
+//        }
+
+/*        Optional<StorageStock> maybeStock = storageStockDao.findById(2L);
+        StorageStock storageStock = maybeStock.get();
+
+        ClientStock clientStock = storageStockToClientStock.mapFrom(storageStock);
+
+        ClientStock save = clientStockDao.save(clientStock);
+        System.out.println(save);
+
+        save.setAmount(4L);
+
+        clientStockDao.update(save);*/
+
+/*        Optional<Client> byId = clientDao.findById(1L);
+        Client client = byId.get();
+
+        Optional<ClientStock> byId1 = clientStockDao.findById(2L);
+        ClientStock clientStock = byId1.get();
+
+        clientDao.addStockToClient(client,clientStock);*/
+
+//        List<Client> all = clientDao.findAll();
+//
+//        for (Client client : all) {
+//            for (Client client1 : all) {
+//                System.out.println(client1.getStocks());
+//            }
+//        }
+
+//        Optional<Client> byId = clientDao.findById(2L);
+//        System.out.println(byId.get().getStocks());
+
+//        List<StorageStock> all = storageStockDao.findAll();
+//        System.out.println(all);
+
+//        Optional<StorageStock> byId = storageStockDao.findById(1L);
+//        System.out.println(byId);
+//
+//        StorageStockDto storageStockDto = storageStockByIdMapper.mapFrom(byId);
+//        System.out.println(storageStockDto);
+
+//        StorageStockDto byId = storageStockService.findById(1L);
+//        System.out.println(byId);
+
+//        List<StorageStock> all = storageStockService.findAll();
+//        System.out.println(all);
+
+        Client client = clientDao.findById(1L).get();
+        System.out.println(client);
+
     }
 }

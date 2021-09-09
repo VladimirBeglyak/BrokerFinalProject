@@ -1,147 +1,129 @@
-CREATE DATABASE broker;
-
-CREATE TABLE stocks
+CREATE TABLE clients_stocks
 (
-    id       SERIAL PRIMARY KEY,
-    ticker   VARCHAR(32)  NOT NULL UNIQUE,
-    name     VARCHAR(128) NOT NULL,
-    cost     DECIMAL      NOT NULL,
-    dividend DECIMAL,
-    currency VARCHAR(32)  NOT NULL
+    id             BIGSERIAL PRIMARY KEY,
+    ticker         VARCHAR(32)  NOT NULL,
+    name           VARCHAR(128) NOT NULL,
+    amount         BIGINT,
+    cost_one_stock DECIMAL      NOT NULL,
+    operation VARCHAR(10),
+    date date,
+    country        VARCHAR(128) NOT NULL,
+    dividend       DECIMAL,
+    currency       VARCHAR(20) NOT NULL
 );
-
-CREATE TABLE clients
-(
-    id          SERIAL PRIMARY KEY,
-    first_name  VARCHAR(128)        NOT NULL,
-    last_name   VARCHAR(128)        NOT NULL,
-    father_name VARCHAR(128),
-    birthday    DATE                NOT NULL,
-    passport_id VARCHAR(128) UNIQUE NOT NULL,
-    password    VARCHAR(128)        NOT NULL,
-    email       VARCHAR(128)        NOT NULL UNIQUE,
-    role        VARCHAR(128)        NOT NULL,
-    stock_id BIGINT REFERENCES stocks (id)
-);
-
-DROP TABLE clients CASCADE ;
 
 CREATE TABLE currencies
 (
     id     BIGSERIAL PRIMARY KEY,
-    ticker VARCHAR(128) NOT NULL UNIQUE,
-    name   VARCHAR(128) NOT NULL
+    ticker VARCHAR(32) NOT NULL UNIQUE,
+    name   VARCHAR(32) NOT NULL UNIQUE
 );
 
-CREATE TABLE currencies_clients
+CREATE TABLE clients
 (
-    currencies_id BIGINT REFERENCES currencies (id) NOT NULL,
-    amount        DECIMAL,
-    clients_id    BIGINT REFERENCES clients (id)    NOT NULL
+    id       BIGSERIAL PRIMARY KEY,
+    email    VARCHAR(128) NOT NULL UNIQUE,
+    password VARCHAR(128) NOT NULL,
+    role     VARCHAR(128),
+    detail_id BIGINT,
+    FOREIGN KEY (detail_id) REFERENCES details(id) ON DELETE CASCADE
 );
 
-CREATE TABLE stocks_clients
+CREATE TABLE details
 (
-    stock_id   BIGINT REFERENCES stocks (id)  NOT NULL,
-    amount     BIGINT                         NOT NULL,
-    clients_id BIGINT REFERENCES clients (id) NOT NULL
+    id            BIGSERIAL PRIMARY KEY,
+    first_name    VARCHAR(128) NOT NULL,
+    last_name     VARCHAR(128) NOT NULL,
+    father_name   VARCHAR(128),
+    citizenship   VARCHAR(128) NOT NULL,
+    birthday      DATE         NOT NULL,
+    passport_code VARCHAR(128)
+);
+
+CREATE TABLE client_clients_stocks
+(
+    client_id BIGINT REFERENCES clients (id) NOT NULL,
+    stock_id  BIGINT REFERENCES clients_stocks (id)  NOT NULL
+);
+
+CREATE TABLE clients_currencies
+(
+    client_id   BIGINT REFERENCES clients (id)    NOT NULL,
+    currency_id BIGINT REFERENCES currencies (id) NOT NULL
+);
+
+-- CREATE TABLE storage_stocks_currencies
+-- (
+--     stock_id    BIGINT REFERENCES storage_stocks (id)     NOT NULL,
+--     currency_id BIGINT REFERENCES currencies (id) NOT NULL
+-- );
+
+CREATE TABLE money
+(
+    id          SERIAL NOT NULL,
+    amount      DECIMAL,
+    currency_id BIGINT,
+    client_id   BIGINT,
+    PRIMARY KEY (id),
+    FOREIGN KEY (currency_id) REFERENCES currencies (id),
+    FOREIGN KEY (client_id) REFERENCES clients (id)
+);
+
+CREATE TABLE clients_money
+(
+    client_id BIGINT REFERENCES clients (id) NOT NULL,
+    money_id  INT REFERENCES money (id)      NOT NULL
+);
+
+DROP TABLE details CASCADE;
+DROP TABLE clients CASCADE;
+DROP TABLE clients CASCADE ;
+DROP TABLE clients_money;
+DROP TABLE clients_stocks;
+
+DROP TABLE money;
+DROP TABLE money;
+
+DROP TABLE stock_currencies;
+
+DROP TABLE stocks CASCADE;
+
+CREATE TABLE storage_stocks
+(
+    id             BIGSERIAL PRIMARY KEY,
+    ticker         VARCHAR(32)  NOT NULL,
+    name           VARCHAR(128) NOT NULL,
+    amount         BIGINT,
+    cost_one_stock DECIMAL      NOT NULL,
+    country        VARCHAR(128) NOT NULL,
+    dividend       DECIMAL,
+    currency_id    INT NOT NULL,
+    FOREIGN KEY (currency_id) REFERENCES currencies
 );
 
 
-SELECT c.id,
-       first_name,
-       last_name,
-       father_name,
-       birthday,
-       passport_id,
-       password,
-       email,
-       role,
-       s.id,
-       s.name,
-       s.ticker,
-       s.cost,
-       s.dividend,
-       s.currency
-FROM clients c
-         JOIN stocks s on s.id = c.stock_id
-WHERE c.id = 2;
 
-SELECT c.id,
-       first_name,
-       last_name,
-       father_name,
-       birthday,
-       passport_id,
-       password,
-       email,
-       role,
-       s.id,
-       s.ticker,
-       s.name,
-       s.cost,
-       s.currency,
-       s.dividend
-FROM clients c
-         JOIN stocks s on c.stock_id = s.id
-WHERE c.id = 2;
 
-SELECT c.id,
-       first_name,
-       last_name,
-       father_name,
-       birthday,
-       passport_id,
-       password,
-       email,
-       role,
-       cc.amount,
-       currencies.name,
-       currencies.ticker
-FROM clients c
-         JOIN currencies_clients cc ON c.id = cc.clients_id
-         JOIN currencies ON cc.currencies_id = currencies.id
-WHERE c.id = 2;
 
-SELECT clients.id,
-       first_name,
-       last_name,
-       father_name,
-       birthday,
-       passport_id,
-       password,
-       email,
-       role,
-       stock_id
-       /*s.id,
-       s.ticker,
-       s.name,
-       s.dividend,
-       s.cost,
-       s.currency*/
-FROM clients
-         JOIN stocks s on s.id = clients.stock_id
-WHERE clients.id=?;
 
-SELECT
-clients.id,
-       first_name,
-       last_name,
-       father_name,
-       birthday,
-       passport_id,
-       password,
-       email,
-       role,
-       stock_id,
-       s.id,
-       s.ticker,
-       s.name,
-       s.currency,
-       s.cost,
-       s.dividend
-FROM clients
-JOIN stocks s on s.id = clients.stock_id
-WHERE clients.id=3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT * FROM clients_stocks
+                  JOIN client_clients_stocks ccs ON clients_stocks.id = ccs.stock_id
+WHERE client_id=1
 
 

@@ -1,6 +1,7 @@
 package by.broker.http.dao;
 
-import by.broker.http.entity.Currenci;
+import by.broker.http.entity.Currency;
+import by.broker.http.entity.StorageStock;
 import by.broker.http.util.ConnectionManager;
 import lombok.SneakyThrows;
 
@@ -9,10 +10,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class CurrenciDao implements Dao<Long,Currenci>{
+public class CurrencyDao implements Dao<Long, Currency>{
 
-    private static CurrenciDao INSTANCE=null;
-    private CurrenciDao(){}
+    private static final String FIND_BY_STOCK_ID= """
+            SELECT * FROM currencies
+            JOIN storage_stocks ss on currencies.id = ss.currency_id
+            WHERE currency_id=?
+            """;
+
+    private static CurrencyDao INSTANCE;
+
+    private CurrencyDao(){}
+
     private static final String UPDATE_SQL= """
             UPDATE currencies
             SET ticker = ?,
@@ -38,6 +47,7 @@ public class CurrenciDao implements Dao<Long,Currenci>{
             DELETE FROM currencies WHERE id=?;
             """;
 
+
     @SneakyThrows
     @Override
     public boolean delete(Long id) {
@@ -49,31 +59,32 @@ public class CurrenciDao implements Dao<Long,Currenci>{
         }
     }
 
+
     @SneakyThrows
     @Override
-    public Currenci save(Currenci currenci) {
+    public Currency save(Currency currency) {
         try (Connection connection = ConnectionManager.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(ADD_CURRENCY, Statement.RETURN_GENERATED_KEYS);
-            preparedStatement.setObject(1,currenci.getTicker());
-            preparedStatement.setObject(2,currenci.getName());
+            preparedStatement.setObject(1,currency.getTicker());
+            preparedStatement.setObject(2,currency.getName());
             preparedStatement.executeUpdate();
 
             ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
             if (generatedKeys.next()){
-                currenci.setId(generatedKeys.getObject(1,Long.class));
+                currency.setId(generatedKeys.getObject(1,Long.class));
             }
-            return currenci;
+            return currency;
         }
     }
 
     @SneakyThrows
     @Override
-    public void update(Currenci currenci) {
+    public void update(Currency currency) {
         try (Connection connection = ConnectionManager.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_SQL);
-            preparedStatement.setObject(1,currenci.getTicker());
-            preparedStatement.setObject(2,currenci.getName());
-            preparedStatement.setObject(3,currenci.getId());
+            preparedStatement.setObject(1,currency.getTicker());
+            preparedStatement.setObject(2,currency.getName());
+            preparedStatement.setObject(3,currency.getId());
 
             preparedStatement.executeUpdate();
         }
@@ -81,48 +92,62 @@ public class CurrenciDao implements Dao<Long,Currenci>{
 
     @SneakyThrows
     @Override
-    public Optional<Currenci> findById(Long id) {
+    public Optional<Currency> findById(Long id) {
         try (Connection connection = ConnectionManager.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID);
             preparedStatement.setObject(1,id);
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            Currenci currenci=null;
+            Currency currency=null;
 
             if (resultSet.next()){
-                currenci= buildCurrenci(resultSet);
+                currency= buildCurrency(resultSet);
             }
-            return Optional.ofNullable(currenci);
+            return Optional.ofNullable(currency);
         }
     }
 
     @SneakyThrows
     @Override
-    public List<Currenci> findAll() {
+    public List<Currency> findAll() {
         try (Connection connection = ConnectionManager.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(FIND_ALL_SQL);
             ResultSet resultSet = preparedStatement.executeQuery();
-            List<Currenci> currencis=new ArrayList<>();
+            List<Currency> currencies=new ArrayList<>();
             while (resultSet.next()){
-                currencis.add(buildCurrenci(resultSet));
+                currencies.add(buildCurrency(resultSet));
             }
-            return currencis;
+            return currencies;
         }
     }
 
-    private Currenci buildCurrenci(ResultSet resultSet) throws SQLException {
-        return Currenci.builder()
+    private Currency buildCurrency(ResultSet resultSet) throws SQLException {
+        return Currency.builder()
                 .id(resultSet.getObject("id",Long.class))
                 .ticker(resultSet.getObject("ticker",String.class))
                 .name(resultSet.getObject("name",String.class))
                 .build();
     }
 
-    public static CurrenciDao getInstance() {
+    @SneakyThrows
+    public Currency findByStockId(Long id) {
+        try (Connection connection = ConnectionManager.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_STOCK_ID);
+            preparedStatement.setObject(1,id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            Currency currency=null;
+            if (resultSet.next()){
+                currency=buildCurrency(resultSet);
+            }
+            return currency;
+        }
+    }
+
+    public static CurrencyDao getInstance() {
         if (INSTANCE==null){
-            synchronized (CurrenciDao.class){
+            synchronized (CurrencyDao.class){
                 if (INSTANCE==null){
-                    INSTANCE=new CurrenciDao();
+                    INSTANCE=new CurrencyDao();
                 }
             }
         }

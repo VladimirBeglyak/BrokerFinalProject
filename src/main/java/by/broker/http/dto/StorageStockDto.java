@@ -1,18 +1,20 @@
 package by.broker.http.dto;
 
+import by.broker.http.entity.Currency;
 import lombok.Builder;
 import lombok.Value;
 
+import java.math.BigDecimal;
+
 @Value
 @Builder
-public class StockDto{
+public class StorageStockDto {
 
-    Long id;
     String ticker;
     String name;
-    String cost;
+    String amount;
+    String costOneStock;
+    String country;
     String dividend;
     String currency;
-
-
 }

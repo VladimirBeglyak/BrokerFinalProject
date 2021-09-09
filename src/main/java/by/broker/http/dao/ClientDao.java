@@ -6,7 +6,6 @@ import by.broker.http.util.ConnectionManager;
 import lombok.SneakyThrows;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,28 +14,31 @@ import java.util.stream.Collectors;
 public class ClientDao implements Dao<Long, Client>,
         FilterDao<Client, ClientFilter> {
 
-    private static final String SAVE_CLINET = """
-            INSERT INTO clients (first_name, last_name, father_name, birthday, passport_id, password, email, role,stock_id) 
-            VALUES (?,?,?,?,?,?,?,?,?)
+    private static final String SAVE_CLIENT = """
+            INSERT INTO clients (
+            email, 
+            password, 
+            role
+            ) 
+            VALUES (?,?,?)
+            """;
+
+    private static final String SAVE_STOCK_TO_CLIENT= """
+            INSERT INTO client_clients_stocks (client_id, stock_id) 
+            VALUES (?,?)
             """;
 
     private static final String UPDATE_CLIENT = """
             UPDATE clients
-            SET first_name=?,
-            last_name=?,
-            father_name=?,
-            birthday=?,
-            passport_id=?,
+            SET email=?,
             password=?,
-            email=?,
-            role=?,
-            stock_id=?
+            detail_id=?
             WHERE id=?
             """;
 
 
-    private static final String FIND_ALL_CLIENTS = """
-            SELECT 
+    private static final String FIND_ALL_CLIENTS_FILTER = """
+            SELECT
             clients.id,
                    first_name,
                    last_name,
@@ -58,9 +60,31 @@ public class ClientDao implements Dao<Long, Client>,
             ON clients.stock_id=s.id
             """;
 
-    private static final String FIND_BY_ID_CLIENT = FIND_ALL_CLIENTS + """
+    private static final String FIND_ALL_CLIENTS = """
+            SELECT *
+            FROM clients
+            """;
+
+    private static final String FIND_BY_ID_CLIENT = FIND_ALL_CLIENTS_FILTER + """
             WHERE clients.id=?
             """;
+
+    private static final String FIND_BY_ID = """
+            SELECT * FROM clients
+            WHERE id=?
+            """;
+
+    private static final String FIND_BY_EMAIL_AND_PASSWORD = """
+            SELECT * FROM clients
+            WHERE email=?
+            AND password=?
+            """;
+    private static final String DELETE_CLIENT = """
+            DELETE FROM clients
+            WHERE id=?
+            """;
+
+    private static ClientDao INSTANCE;
 
     private ClientDao() {
     }
@@ -76,22 +100,27 @@ public class ClientDao implements Dao<Long, Client>,
         return INSTANCE;
     }
 
-    private final StockDao stockDao = StockDao.getInstance();
+    private final MoneyDao moneyDao = MoneyDao.getInstance();
+    private final DetailDao detailDao=DetailDao.getInstance();
+    private final ClientStockDao clientStockDao=ClientStockDao.getInstance();
+
+    @SneakyThrows
+    public void addStockToClient(Client client,ClientStock clientStock){
+        Connection connection = ConnectionManager.getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(SAVE_STOCK_TO_CLIENT);
+        preparedStatement.setObject(1,client.getId());
+        preparedStatement.setObject(2,clientStock.getId());
+        preparedStatement.executeUpdate();
+    }
 
     @SneakyThrows
     @Override
     public Client save(Client client) {
         try (Connection connection = ConnectionManager.getConnection()) {
-            PreparedStatement preparedStatement = connection.prepareStatement(SAVE_CLINET, Statement.RETURN_GENERATED_KEYS);
-            preparedStatement.setObject(1, client.getFirstName());
-            preparedStatement.setObject(2, client.getLastName());
-            preparedStatement.setObject(3, client.getFatherName());
-            preparedStatement.setObject(4, client.getBirthday());
-            preparedStatement.setObject(5, client.getPassportId());
-            preparedStatement.setObject(6, client.getPassword());
-            preparedStatement.setObject(7, client.getEmail());
-            preparedStatement.setObject(8, client.getRole().name());
-            preparedStatement.setObject(9,client.getStock().getId());
+            PreparedStatement preparedStatement = connection.prepareStatement(SAVE_CLIENT, Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setObject(1, client.getEmail());
+            preparedStatement.setObject(2, client.getPassword());
+            preparedStatement.setObject(3, Role.USER.name());
             preparedStatement.executeUpdate();
 
             ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
@@ -121,7 +150,7 @@ public class ClientDao implements Dao<Long, Client>,
     @Override
     public Optional<Client> findById(Long id) {
         try (Connection connection = ConnectionManager.getConnection()) {
-            PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID_CLIENT);
+            PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID);
             preparedStatement.setObject(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
             //System.out.println(preparedStatement);
@@ -138,25 +167,25 @@ public class ClientDao implements Dao<Long, Client>,
     public void update(Client client) {
         try (Connection connection = ConnectionManager.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_CLIENT);
-            preparedStatement.setObject(1, client.getFirstName());
-            preparedStatement.setObject(2, client.getLastName());
-            preparedStatement.setObject(3, client.getFatherName());
-            preparedStatement.setObject(4, client.getBirthday());
-            preparedStatement.setObject(5, client.getPassportId());
-            preparedStatement.setObject(6, client.getPassword());
-            preparedStatement.setObject(7, client.getEmail());
-            preparedStatement.setObject(8, client.getRole().name());
-            preparedStatement.setObject(9,client.getStock().getId());
-            preparedStatement.setObject(10, client.getId());
+            preparedStatement.setObject(1, client.getEmail());
+            preparedStatement.setObject(2, client.getPassword());
+            preparedStatement.setObject(3, client.getDetail().getId());
+            preparedStatement.setObject(4, client.getId());
             preparedStatement.executeUpdate();
         }
     }
 
+    @SneakyThrows
     @Override
     public boolean delete(Long id) {
-        return false;
+        try (Connection connection = ConnectionManager.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement(DELETE_CLIENT);
+            preparedStatement.setObject(1, id);
+            return preparedStatement.executeUpdate() > 0;
+        }
     }
 
+    //filter
     @SneakyThrows
     @Override
     public List<Client> findAll(ClientFilter filter) {
@@ -179,7 +208,7 @@ public class ClientDao implements Dao<Long, Client>,
         String where = whereSql.stream()
                 .collect(Collectors.joining(" AND ", " WHERE ", " LIMIT ? OFFSET ? "));
 
-        String sql = FIND_ALL_CLIENTS + where;
+        String sql = FIND_ALL_CLIENTS_FILTER + where;
                 /*+ """
                 LIMIT ?
                 OFFSET ?
@@ -201,24 +230,38 @@ public class ClientDao implements Dao<Long, Client>,
         }
     }
 
+    @SneakyThrows
+    public Optional<Client> findByEmailAndPassword(String email, String password) {
+        try (Connection connection = ConnectionManager.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_EMAIL_AND_PASSWORD);
+            preparedStatement.setObject(1, email);
+            preparedStatement.setObject(2, password);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            Client client = null;
+            if (resultSet.next()) {
+                client = buildClient(resultSet);
+            }
+            return Optional.ofNullable(client);
+        }
+    }
+
     private Client buildClient(ResultSet resultSet) throws SQLException {
 
         return Client.builder()
-                .id(resultSet.getLong("id"))
-                .firstName(resultSet.getObject("first_name", String.class))
-                .lastName(resultSet.getObject("last_name", String.class))
-                .fatherName(resultSet.getObject("father_name", String.class))
-                .birthday(resultSet.getObject("birthday", LocalDate.class))
-                .passportId(resultSet.getObject("passport_id", String.class))
+                .id(resultSet.getObject("id", Long.class))
                 .password(resultSet.getObject("password", String.class))
                 .email(resultSet.getObject("email", String.class))
                 .role(Role.valueOf(resultSet.getObject("role", String.class)))
-                .stock(stockDao.findById(resultSet.getObject("stock_id", Long.class),
-                        resultSet.getStatement().getConnection()).orElse(null))
+                //.role(Role.find(resultSet.getObject("role",String.class)).orElse(null)) этот вариант, если поле role необязательное
+//                .detail(detailDao.findById(resultSet.getObject("detail_id", Long.class),
+//                        resultSet.getStatement().getConnection()).orElse(null))
+                .detail(detailDao.findById(resultSet.getObject("detail_id",Long.class)).orElse(null))
+//                .stocks(clientStockDao.findAllByClientId(resultSet.getObject("id", Long.class)))
+                .stocks(clientStockDao.findAllByClientId(resultSet.getObject("id",Long.class)))
+                .monies(moneyDao.findAllByClientId(resultSet.getObject("id", Long.class)))
                 .build();
     }
-
-    private static ClientDao INSTANCE = null;
 
 
 }

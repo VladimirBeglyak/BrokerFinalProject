@@ -1,11 +1,10 @@
 package by.broker.http.service;
 
-import by.broker.http.dao.StockDao;
+import by.broker.http.dao.ClientStockDao;
 import by.broker.http.dto.StockDto;
-import by.broker.http.entity.Stock;
-import by.broker.http.mapper.CreateStockMapper;
+import by.broker.http.mapper.CreateStorageStockMapper;
 import by.broker.http.mapper.ListStockMapper;
-import by.broker.http.mapper.StockByIdMapper;
+import by.broker.http.mapper.StorageStockByIdMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,26 +27,25 @@ public class StockService {
         return INSTANCE;
     }
 
-    private final StockDao stockDao=StockDao.getInstance();
-    private final CreateStockMapper createStockMapper= CreateStockMapper.getInstance();
+    private final ClientStockDao stockDao= ClientStockDao.getInstance();
     private final ListStockMapper listStockMapper=ListStockMapper.getInstance();
-    private final StockByIdMapper stockByIdMapper=StockByIdMapper.getInstance();
 
 
 
-    public Stock save(StockDto stockDto){
-        return stockDao.save(createStockMapper.mapFrom(stockDto));
-    }
 
-    public List<StockDto> findAll(){
-        return stockDao.findAll().stream()
-                .map(stock -> listStockMapper.mapFrom(stock))
-                .collect(toList());
-    }
+//    public ClientStock save(StockDto stockDto){
+//        return stockDao.save(createStockMapper.mapFrom(stockDto));
+//    }
 
-    public StockDto findById(Long id){
-       return stockDao.findById(id)
-               .map(stock -> stockByIdMapper.mapFrom(Optional.of(stock)))
-               .get();
-    }
+//    public List<StockDto> findAll(){
+//        return stockDao.findAll().stream()
+//                .map(stock -> listStockMapper.mapFrom(stock))
+//                .collect(toList());
+//    }
+//
+//    public StockDto findById(Long id){
+//       return stockDao.findById(id)
+//               .map(stock -> stockByIdMapper.mapFrom(Optional.of(stock)))
+//               .get();
+//    }
 }

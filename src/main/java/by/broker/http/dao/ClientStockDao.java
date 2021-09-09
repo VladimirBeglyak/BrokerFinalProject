@@ -1,8 +1,8 @@
 package by.broker.http.dao;
 
 import by.broker.http.dto.StockFilter;
-import by.broker.http.entity.Currency;
-import by.broker.http.entity.Stock;
+import by.broker.http.entity.Client;
+import by.broker.http.entity.ClientStock;
 import by.broker.http.util.ConnectionManager;
 import lombok.SneakyThrows;
 
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class StockDao implements Dao<Long,Stock>,FilterDao<Stock,StockFilter>
+public class ClientStockDao implements Dao<Long, ClientStock>,FilterDao<ClientStock,StockFilter>
 
         /*CreateInterface<Stock>,
         FindInterface<Stock, Integer>,
@@ -24,108 +24,120 @@ public class StockDao implements Dao<Long,Stock>,FilterDao<Stock,StockFilter>
         UpdateInterface<Stock>,
         FilterDao<Stock, StockFilter>*/ {
 
+    private static final String FIND_ALL_STOCKS_BY_CLIENT= """
+            SELECT * FROM clients_stocks
+            JOIN client_clients_stocks ccs ON clients_stocks.id = ccs.stock_id
+            WHERE client_id=?
+            """;
+
+
     private static final String ADD_STOCK = """
-            INSERT INTO stocks 
-            (ticker, name, cost, dividend, currency) 
-            VALUES (?,?,?,?,?)
+            INSERT INTO clients_stocks
+            (ticker, name, amount, cost_one_stock, country, dividend,currency) 
+            VALUES (?,?,?,?,?,?,?)
             """;
     private static final String FIND_ALL_STOCKS = """
             SELECT 
-            id,
-            ticker,
-            name,
-            cost,
-            dividend,
-            currency 
-            FROM stocks
+            *
+            FROM clients_stocks
             """;
     private static final String FIND_STOCK_BY_ID = FIND_ALL_STOCKS + """ 
             WHERE id=?
             """;
     private static final String DELETE_STOCK = """
-            DELETE FROM stocks
+            DELETE FROM clients_stocks
             WHERE id=?
             """;
     private static final String UPDATE_STOCK = """
-            UPDATE stocks
+            UPDATE clients_stocks
             SET ticker=?,
             name=?,
-            cost=?,
+            amount=?,
+            cost_one_stock=?,
+            country=?,
             dividend=?,
             currency=?
             WHERE id=?
             """;
 
-    private static StockDao INSTANCE = null;
+    private static ClientStockDao INSTANCE;
 
-    private StockDao() {
+    private ClientStockDao() {
     }
 
-    public static StockDao getInstance() {
+    public static ClientStockDao getInstance() {
         if (INSTANCE == null) {
-            synchronized (StockDao.class) {
+            synchronized (ClientStockDao.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = new StockDao();
+                    INSTANCE = new ClientStockDao();
                 }
             }
         }
         return INSTANCE;
     }
 
+
+
+
     @SneakyThrows
     @Override
-    public Stock save(Stock stock) {
+    public ClientStock save(ClientStock clientStock) {
         try (Connection connection = ConnectionManager.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(ADD_STOCK, Statement.RETURN_GENERATED_KEYS);
-            preparedStatement.setObject(1, stock.getTicker());
-            preparedStatement.setObject(2, stock.getName());
-            preparedStatement.setObject(3, stock.getCost());
-            preparedStatement.setObject(4, stock.getDividend());
-            preparedStatement.setObject(5, stock.getCurrency().name());
+            preparedStatement.setObject(1, clientStock.getTicker());
+            preparedStatement.setObject(2, clientStock.getName());
+            preparedStatement.setObject(3, clientStock.getAmount());
+            preparedStatement.setObject(4, clientStock.getCostOneStock());
+            preparedStatement.setObject(5, clientStock.getCounty());
+            preparedStatement.setObject(6, clientStock.getDividend());
+            preparedStatement.setObject(7, clientStock.getCurrency());
+
+
             preparedStatement.executeUpdate();
 
             ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
             if (generatedKeys.next()) {
-                stock.setId(generatedKeys.getObject(1, Long.class));
+                clientStock.setId(generatedKeys.getObject(1, Long.class));
             }
-            return stock;
+
+            return clientStock;
         }
     }
 
     @SneakyThrows
     @Override
-    public List<Stock> findAll() {
+    public List<ClientStock> findAll() {
         try (Connection connection = ConnectionManager.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(FIND_ALL_STOCKS);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            List<Stock> stocks = new ArrayList<>();
+            List<ClientStock> clientStocks = new ArrayList<>();
             while (resultSet.next()) {
-                stocks.add(buildStock(resultSet));
+                clientStocks.add(buildStock(resultSet));
             }
-            return stocks;
+            return clientStocks;
         }
     }
 
     @SneakyThrows
     @Override
-    public Optional<Stock> findById(Long id) {
+    public Optional<ClientStock> findById(Long id) {
         try (Connection connection = ConnectionManager.getConnection()) {
             return findById(id,connection);
         }
     }
 
     @SneakyThrows
-    public Optional<Stock> findById(Long id, Connection connection){
+    public Optional<ClientStock> findById(Long id, Connection connection){
         try(PreparedStatement preparedStatement=connection.prepareStatement(FIND_STOCK_BY_ID)) {
             preparedStatement.setObject(1,id);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            Stock stock = null;
+            ClientStock clientStock = null;
             if (resultSet.next()) {
-                stock = buildStock(resultSet);
+                clientStock = buildStock(resultSet);
             }
-            return Optional.ofNullable(stock);
+            return Optional.ofNullable(clientStock);
         }
     }
 
@@ -142,15 +154,17 @@ public class StockDao implements Dao<Long,Stock>,FilterDao<Stock,StockFilter>
 
     @SneakyThrows
     @Override
-    public void update(Stock stock) {
+    public void update(ClientStock clientStock) {
         try (Connection connection = ConnectionManager.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_STOCK);
-            preparedStatement.setObject(1, stock.getTicker());
-            preparedStatement.setObject(2, stock.getName());
-            preparedStatement.setObject(3, stock.getCost());
-            preparedStatement.setObject(4, stock.getDividend());
-            preparedStatement.setObject(5, stock.getCurrency().name());
-            preparedStatement.setObject(6, stock.getId());
+            preparedStatement.setObject(1, clientStock.getTicker());
+            preparedStatement.setObject(2, clientStock.getName());
+            preparedStatement.setObject(3,clientStock.getAmount());
+            preparedStatement.setObject(4, clientStock.getCostOneStock());
+            preparedStatement.setObject(5,clientStock.getCounty());
+            preparedStatement.setObject(6, clientStock.getDividend());
+            preparedStatement.setObject(7, clientStock.getCurrency());
+            preparedStatement.setObject(8, clientStock.getId());
 
             preparedStatement.executeUpdate();
 
@@ -158,20 +172,24 @@ public class StockDao implements Dao<Long,Stock>,FilterDao<Stock,StockFilter>
     }
 
 
-    private Stock buildStock(ResultSet resultSet) throws java.sql.SQLException {
-        return Stock.builder()
+    private ClientStock buildStock(ResultSet resultSet) throws java.sql.SQLException {
+        return ClientStock.builder()
                 .id(resultSet.getObject("id", Long.class))
                 .ticker(resultSet.getObject("ticker", String.class))
                 .name(resultSet.getObject("name", String.class))
-                .cost(resultSet.getObject("cost", BigDecimal.class))
+                .amount(resultSet.getObject("amount",Long.class))
+                .costOneStock(resultSet.getObject("cost_one_stock", BigDecimal.class))
                 .dividend(resultSet.getObject("dividend", BigDecimal.class))
-                .currency(Currency.valueOf(resultSet.getObject("currency", String.class)))
+                .county(resultSet.getObject("country",String.class))
+                //.currency(Currency.valueOf(resultSet.getObject("currency", String.class)))
+                //.currencies(currencyDao.findAllByStockId(resultSet.getObject("id",Long.class)))
+                .currency(resultSet.getObject("currency",String.class))
                 .build();
     }
 
     @SneakyThrows
     @Override
-    public List<Stock> findAll(StockFilter filter) {
+    public List<ClientStock> findAll(StockFilter filter) {
         List<Object> parameters = new ArrayList<>();
         List<String> whereSql=new ArrayList<>();
         if (filter.getName()!=null){
@@ -200,11 +218,24 @@ public class StockDao implements Dao<Long,Stock>,FilterDao<Stock,StockFilter>
             System.out.println(parameters);
             System.out.println(preparedStatement);
             ResultSet resultSet = preparedStatement.executeQuery();
-            List<Stock> stocks = new ArrayList<>();
+            List<ClientStock> clientStocks = new ArrayList<>();
             while (resultSet.next()) {
-                stocks.add(buildStock(resultSet));
+                clientStocks.add(buildStock(resultSet));
             }
-            return stocks;
+            return clientStocks;
         }
+    }
+
+    @SneakyThrows
+    public List<ClientStock> findAllByClientId(Long id){
+        Connection connection = ConnectionManager.getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(FIND_ALL_STOCKS_BY_CLIENT);
+        preparedStatement.setObject(1,id);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        List<ClientStock> clientStocks=new ArrayList<>();
+        while (resultSet.next()){
+            clientStocks.add(buildStock(resultSet));
+        }
+        return clientStocks;
     }
 }

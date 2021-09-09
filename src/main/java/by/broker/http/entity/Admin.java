@@ -6,8 +6,11 @@ import lombok.Data;
 
 @Data
 @Builder
-public class Currenci {
+public class Admin {
+
     private Long id;
-    private String ticker;
-    private String name;
+    private String email;
+    private String password;
+    private Role role;
+
 }

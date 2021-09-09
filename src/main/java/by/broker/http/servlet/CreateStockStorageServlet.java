@@ -1,9 +1,8 @@
 package by.broker.http.servlet;
 
-import by.broker.http.dto.StockDto;
-import by.broker.http.entity.Currency;
-import by.broker.http.entity.Stock;
-import by.broker.http.service.StockService;
+import by.broker.http.dao.CurrencyDao;
+import by.broker.http.dto.StorageStockDto;
+import by.broker.http.service.StorageStockService;
 import by.broker.http.util.ServletUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,33 +12,37 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-@WebServlet("/add-stock")
-public class CreateStockServlet extends HttpServlet {
+import static by.broker.http.util.UrlPath.*;
 
-    private final StockService stockService=StockService.getInstance();
+@WebServlet(ADD_STOCK)
+public class CreateStockStorageServlet extends HttpServlet {
+
+    private final StorageStockService storageStockService=StorageStockService.getInstance();
+    private final CurrencyDao currencyDao=CurrencyDao.getInstance();
+
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setAttribute("currency", Currency.values());
-        req.getRequestDispatcher(ServletUtil.getFullPath("add-stock"))
+        req.setAttribute("currency", currencyDao.findAll());
+        req.getRequestDispatcher(ServletUtil.getFullPath("add-stock-to-storage"))
                 .forward(req,resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        Stock save = stockService.save(
-                StockDto.builder()
+        storageStockService.save(
+                StorageStockDto.builder()
                         .name(req.getParameter("name"))
                         .ticker(req.getParameter("ticker"))
-                        .cost(req.getParameter("cost"))
+                        .amount(req.getParameter("amount"))
+                        .costOneStock(req.getParameter("costOneStock"))
+                        .country(req.getParameter("country"))
                         .dividend(req.getParameter("dividend"))
                         .currency(req.getParameter("currency"))
                         .build()
         );
 
-        System.out.println(save);
-
-        resp.sendRedirect("/stocks");
+        resp.sendRedirect(STOCKS);
     }
 }

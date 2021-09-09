@@ -10,16 +10,17 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-@WebServlet("/stock")
-public class StockFullInfoServlet extends HttpServlet {
+import static by.broker.http.util.UrlPath.*;
+
+@WebServlet(STOCKS)
+public class ListStorageStockServlet extends HttpServlet {
 
     private final StorageStockService storageStockService =StorageStockService.getInstance();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        long id = Long.parseLong(req.getParameter("id"));
-        req.setAttribute("stock", storageStockService.findById(id));
-        req.getRequestDispatcher(ServletUtil.getFullPath("stock-full-info"))
+        req.setAttribute("stocks", storageStockService.findAll());
+        req.getRequestDispatcher(ServletUtil.getFullPath("stocks"))
                 .forward(req,resp);
     }
 }

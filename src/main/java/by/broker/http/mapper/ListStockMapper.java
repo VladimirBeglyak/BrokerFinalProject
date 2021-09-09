@@ -1,9 +1,9 @@
 package by.broker.http.mapper;
 
 import by.broker.http.dto.StockDto;
-import by.broker.http.entity.Stock;
+import by.broker.http.entity.ClientStock;
 
-public class ListStockMapper implements Mapper<Stock, StockDto> {
+public class ListStockMapper implements Mapper<ClientStock, StockDto> {
 
     private static ListStockMapper INSTANCE=null;
 
@@ -21,14 +21,14 @@ public class ListStockMapper implements Mapper<Stock, StockDto> {
     }
 
     @Override
-    public StockDto mapFrom(Stock object) {
+    public StockDto mapFrom(ClientStock object) {
         return StockDto.builder()
                 .id(object.getId())
                 .name(object.getName())
                 .ticker(object.getTicker())
-                .cost(object.getCost().toString())
+                .cost(object.getCostOneStock().toString())
                 .dividend(object.getDividend().toString())
-                .currency(object.getCurrency().name())
+                //.currency(object.getCurrency().name())
                 .build();
     }
 }

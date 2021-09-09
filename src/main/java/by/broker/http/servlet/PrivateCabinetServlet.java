@@ -1,7 +1,7 @@
 package by.broker.http.servlet;
 
-import by.broker.http.service.StockService;
 import by.broker.http.util.ServletUtil;
+import by.broker.http.util.UrlPath;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,15 +10,14 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-@WebServlet("/stocks")
-public class ListStockServlet extends HttpServlet {
+import static by.broker.http.util.UrlPath.*;
 
-    private final StockService stockService=StockService.getInstance();
+@WebServlet(PRIVATE_CABINET)
+public class PrivateCabinetServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setAttribute("stocks",stockService.findAll());
-        req.getRequestDispatcher(ServletUtil.getFullPath("stocks"))
+        req.getRequestDispatcher(ServletUtil.getFullPath("private-cabinet"))
                 .forward(req,resp);
     }
 }

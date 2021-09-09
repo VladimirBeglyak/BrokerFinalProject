@@ -3,11 +3,17 @@
 <html>
 <head>
     <title>JSP - Hello World</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/WEB-INF/css/style.css">
 </head>
 <body>
 <h1><%= "Hello World!" %>
 </h1>
 <br/>
 <a href="hello-servlet">Hello Servlet</a>
+
+<div class="block">
+
+</div>
+
 </body>
 </html>

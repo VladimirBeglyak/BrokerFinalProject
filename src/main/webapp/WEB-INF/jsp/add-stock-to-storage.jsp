@@ -20,8 +20,18 @@
         <br>
         <br>
 
-        <label for="costId">Введи цену акции:</label>
-        <input type="text" name="cost" id="costId">
+        <label for="amountId">Введи количество акций в обращении:</label>
+        <input type="text" name="amount" id="amountId">
+        <br>
+        <br>
+
+        <label for="costId">Введи цену 1 акции:</label>
+        <input type="text" name="costOneStock" id="costId">
+        <br>
+        <br>
+
+        <label for="countryId">Введи страну эмитента:</label>
+        <input type="text" name="country" id="countryId">
         <br>
         <br>
 
@@ -33,7 +43,7 @@
         <label for="currencyId">Выберите валюту акции:</label>
         <select name="currency" id="currencyId">
             <c:forEach var="currency" items="${requestScope.currency}">
-                <option value="${currency}">${currency}</option>
+                <option value="${currency.id}">${currency.name}, ${currency.ticker}</option>
             </c:forEach>
         </select>
         <br>

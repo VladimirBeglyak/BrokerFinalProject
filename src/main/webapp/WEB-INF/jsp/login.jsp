@@ -1,38 +1,52 @@
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
-    <title>Login</title>
-    <script type="text/javascript" src="/resources/js/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript" src="/resources/js/demo.js"></script>
+    <title>Login Page</title>
+
 </head>
 <body>
-<div>
-    <h1 style="color: red">Вход в личный кабинет</h1>
-</div>
+
+<%@include file="header.jsp"%>
+
 
 <div>
-    <form action="${pageContext.request.contextPath}/register" method="post"></form>
-    <label for="emailId">Login:
-        <input type="text" id="emailId" name="email">
-    </label>
-    <br>
-    <br>
 
-    <label for="passwordId">Password:
-        <input type="password" id="passwordId" name="password">
-    </label>
-    <br>
-    <br>
+    <form action="${pageContext.request.contextPath}/login" method="post">
 
-    <button type="submit">Login</button>
-    <br>
+        <label for="emailId">Email:
+            <input type="text" id="emailId" name="email" value="${param.email}">
+        </label>
+        <br>
 
-    <%--Some text:
-    <input type="text" id="data-input"/>
-    <button type="button" onclick="getInputData()">Send Data</button>
+        <label for="passwordId">Password:
+            <input type="password" id="passwordId" name="password">
+        </label>
+        <br>
 
-    <button type="button" onclick="replaceDataOnDisplay()">Replace</button>
-    <p id="display-data">Original Data</p>--%>
+        <button type="submit">Login</button>
+        <br>
+        <br>
+        <br>
+
+        <div>
+            <a href="${pageContext.request.contextPath}/register">
+                <button type="button">Register</button>
+            </a>
+        </div>
+
+
+            <c:if test="${param.error!=null}">
+                <div style="color: red">
+                    <span>Email or password is not correct</span>
+                </div>
+            </c:if>
+
+    </form>
+
 </div>
+
+<%@include file="footer.jsp"%>
+
 </body>
 </html>

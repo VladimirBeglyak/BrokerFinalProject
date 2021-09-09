@@ -6,10 +6,12 @@
 </head>
 <body>
 <h1>${requestScope.stock.name}</h1>
-<p>Стоимость: ${requestScope.stock.cost}</p>
+<p>Стоимость: ${requestScope.stock.costOneStock}</p>
+<p>Тикер: ${requestScope.stock.ticker}</p>
+<p>Количество: ${requestScope.stock.amount}</p>
 <p>Валюта: ${requestScope.stock.currency}</p>
 <p>Дивидендная доходность: ${requestScope.stock.dividend}</p>
-<p><button type="submit">Buy</button></p>
-<p><button type="submit">Sell</button></p>
+<%--<p><button type="submit">Buy</button></p>--%>
+<%--<p><button type="submit">Sell</button></p>--%>
 </body>
 </html>
